@@ -37,15 +37,13 @@ namespace MusicBeePlugin.DiscordTools
 
     public static string GetCachedAssetUrl(string artist, string album)
     {
-      // hashing prevents any possible character collisions in the stored json
-      string hash = GetHash(artist, album);
+      string hash = artist + ":" + album;
       if (albumUrlPairs.TryGetValue(hash, out string url))
       {
         return url;
       }
       else
       {
-        System.Diagnostics.Debug.WriteLine($"DiscordBee: Adding {hash} for {artist} : {album}");
         JObject albInfo = GetLastFMAlbumInfo(artist, album);
         if (albInfo.ContainsKey("error"))
           return null;
@@ -76,27 +74,6 @@ namespace MusicBeePlugin.DiscordTools
       }
 
       return null;
-    }
-
-    private static string GetHash(string artist, string album)
-    {
-      using (SHA1Managed sha = new SHA1Managed())
-      {
-        string hashedArtist = GenerateHash(sha, artist);
-        string hashedAlbum = GenerateHash(sha, album);
-        return hashedArtist + ":" + hashedAlbum;
-      }
-
-      string GenerateHash(HashAlgorithm hashAlgorithm, string input)
-      {
-        byte[] data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
-        var sBuilder = new StringBuilder();
-
-        for (int i = 0; i < data.Length; i++)
-          sBuilder.Append(data[i].ToString("x2"));
-
-        return sBuilder.ToString();
-      }
     }
 
     private static JObject GetLastFMAlbumInfo(string artist, string album)

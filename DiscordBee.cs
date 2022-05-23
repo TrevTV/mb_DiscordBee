@@ -61,7 +61,7 @@ namespace MusicBeePlugin
       _updateTimer.AutoReset = false;
       _updateTimer.Stop();
 
-      Debug.WriteLine(_about.Name + " loaded");
+      Console.WriteLine(_about.Name + " loaded");
 
       return _about;
     }
@@ -118,8 +118,8 @@ namespace MusicBeePlugin
     // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
     public void ReceiveNotification(string sourceFileUrl, NotificationType type)
     {
-      Debug.WriteLine("DiscordBee: Received Notification {0}", type);
-      Debug.WriteLine("    DiscordRpcClient IsConnected: {0}", _discordClient.IsConnected);
+      Console.WriteLine("DiscordBee: Received Notification {0}", type);
+      Console.WriteLine("    DiscordRpcClient IsConnected: {0}", _discordClient.IsConnected);
 
       // perform some action depending on the notification type
       switch (type)
@@ -166,7 +166,7 @@ namespace MusicBeePlugin
 
     private void UpdateDiscordPresence(PlayState playerGetPlayState)
     {
-      Debug.WriteLine("DiscordBee: Updating Presence with PlayState {0}...", playerGetPlayState);
+      Console.WriteLine("DiscordBee: Updating Presence with PlayState {0}...", playerGetPlayState);
       var metaDataDict = GenerateMetaDataDictionary();
       RichPresence _discordPresence = new RichPresence
       {
@@ -337,12 +337,12 @@ namespace MusicBeePlugin
 
       if (!_settings.UpdatePresenceWhenStopped && (playerGetPlayState == PlayState.Paused || playerGetPlayState == PlayState.Stopped))
       {
-        Debug.WriteLine("Clearing Presence...", "DiscordBee");
+        Console.WriteLine("Clearing Presence...", "DiscordBee");
         _discordClient.ClearPresence();
       }
       else
       {
-        Debug.WriteLine("Setting new Presence...", "DiscordBee");
+        Console.WriteLine("Setting new Presence...", "DiscordBee");
         _discordClient.SetPresence(_discordPresence, _mbApiInterface);
       }
     }
