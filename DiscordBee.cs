@@ -3,6 +3,7 @@ namespace MusicBeePlugin
   using DiscordRPC;
   using MusicBeePlugin.DiscordTools;
   using System;
+  using System.IO;
   using System.Collections.Generic;
   using System.Diagnostics;
   using System.Linq;
@@ -40,11 +41,15 @@ namespace MusicBeePlugin
       _about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
       _about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
-      var settingsFilePath = _mbApiInterface.Setting_GetPersistentStoragePath() + _about.Name + "\\" + _about.Name + ".settings";
+      var basePath = Path.Combine(_mbApiInterface.Setting_GetPersistentStoragePath(), _about.Name);
+      if (!Directory.Exists(basePath))
+        Directory.CreateDirectory(basePath);
 
-      _settings = Settings.GetInstance(settingsFilePath);
+      _settings = Settings.GetInstance(Path.Combine(basePath, _about.Name + ".settings"));
       _settings.SettingChanged += _SettingChangedCallback;
       _settingsWindow = new SettingsWindow(this, _settings);
+
+      AssetManager.SetCachePath(Path.Combine(basePath, "AlbumArtUrlCache.json"));
 
       _discordClient.ArtworkUploadEnabled = _settings.UploadArtwork;
       _discordClient.DiscordId = _settings.DiscordAppId;
@@ -130,8 +135,6 @@ namespace MusicBeePlugin
         case NotificationType.TrackChanged:
         case NotificationType.PlayStateChanged:
           UpdateDiscordPresence(_mbApiInterface.Player_GetPlayState());
-          if (type == NotificationType.TrackChanged)
-            UploadQueuedTracks();
           break;
         // When changing the volume this event is fired for every change so with high frequency, we need to deal with that because the UI thread blocks as long as this handler is running
         case NotificationType.VolumeLevelChanged:
@@ -141,30 +144,7 @@ namespace MusicBeePlugin
           }
           break;
         case NotificationType.PlayingTracksChanged:
-          UploadQueuedTracks();
           break;
-      }
-    }
-
-    private void UploadQueuedTracks()
-    {
-      for (int i = 0; i < 5; i++)
-      {
-        int nextPlayingIndex = _mbApiInterface.NowPlayingList_GetCurrentIndex();
-        string fileUrl = _mbApiInterface.NowPlayingList_GetListFileUrl(nextPlayingIndex + 1 + i);
-        if (string.IsNullOrEmpty(fileUrl))
-        {
-          return;
-        }
-
-        string artwork = _mbApiInterface.Library_GetArtwork(fileUrl, 0);
-        if (string.IsNullOrEmpty(artwork))
-        {
-          continue;
-        }
-
-        Debug.WriteLine("DiscordBee: Uploading artwork (if not cached) for " + fileUrl);
-        _discordClient.UploadArtwork(artwork);
       }
     }
 
@@ -363,7 +343,7 @@ namespace MusicBeePlugin
       else
       {
         Debug.WriteLine("Setting new Presence...", "DiscordBee");
-        _discordClient.SetPresence(_discordPresence, _mbApiInterface.NowPlaying_GetArtwork());
+        _discordClient.SetPresence(_discordPresence, _mbApiInterface);
       }
     }
   }
