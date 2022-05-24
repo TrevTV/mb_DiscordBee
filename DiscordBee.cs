@@ -138,6 +138,8 @@ namespace MusicBeePlugin
           break;
         case NotificationType.TrackChanged:
         case NotificationType.PlayStateChanged:
+          // TODO: when displaying artwork, only update on TrackChanged if the song is playing for at least X seconds to prevent being ratelimited
+          // being ratelimited causes the presence client to be killed and everything disposed of
           UpdateDiscordPresence(mbApiInterface.Player_GetPlayState());
           break;
         // When changing the volume this event is fired for every change so with high frequency, we need to deal with that because the UI thread blocks as long as this handler is running

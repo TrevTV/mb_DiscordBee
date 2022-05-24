@@ -74,6 +74,7 @@ namespace MusicBeePlugin.DiscordTools
       }
 
       // we're also adding nulls here so we arent searching for them every time and we know to ignore them
+      // TODO: related, implement a menu option to force reretrieve album art
       if (!albumUrlPairs.ContainsKey(hash))
         albumUrlPairs.Add(hash, finalUrl);
 
@@ -83,6 +84,7 @@ namespace MusicBeePlugin.DiscordTools
 
     private static async void GetLastFMAlbumInfo(string artist, string album, Action<JObject> callback)
     {
+      // TODO: replace this with a proper queue with a delay between calls
       double msSinceLastCall = (DateTime.Now - lastApiCall).TotalMilliseconds;
       if (msSinceLastCall < 500)
         await System.Threading.Tasks.Task.Delay(1000);
