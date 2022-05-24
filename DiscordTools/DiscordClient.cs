@@ -15,7 +15,9 @@ namespace MusicBeePlugin.DiscordTools
     private DiscordRpcClient _discordClient;
     private LevelDbReader _levelDbReader = new LevelDbReader();
     private string _discordId;
-    private bool _artworkUploadEnabled;
+    private DateTime _lastArtworkChangeTime;
+
+    private const int MS_WAIT_BEFORE_ARTWORK_UPDATE = 1250;
 
     public string DiscordId
     {
@@ -61,25 +63,6 @@ namespace MusicBeePlugin.DiscordTools
       }
     }
 
-    public bool ArtworkUploadEnabled
-    {
-      get => _artworkUploadEnabled;
-      set
-      {
-        if (value != _artworkUploadEnabled)
-        {
-          _artworkUploadEnabled = value;
-          if (value && IsConnected)
-          {
-            Init();
-          }
-          else if (!value)
-          {
-          }
-        }
-      }
-    }
-
     private void Init()
     {
       Debug.WriteLine("Initialising new DiscordClient instance...", "DiscordBee");
@@ -109,7 +92,8 @@ namespace MusicBeePlugin.DiscordTools
     {
       discordPresence = desired.Clone();
 
-      if (Plugin.Instance.settings.DisplayArtwork)
+      double timeSinceLastChange = (DateTime.Now - _lastArtworkChangeTime).TotalMilliseconds;
+      if (Plugin.Instance.settings.DisplayArtwork && timeSinceLastChange > MS_WAIT_BEFORE_ARTWORK_UPDATE)
       {
         string artist = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
         string album = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
@@ -119,12 +103,26 @@ namespace MusicBeePlugin.DiscordTools
           assetUrl = AssetManager.ASSET_LOGO;
 
         discordPresence.Assets.LargeImageKey = assetUrl;
+        _lastArtworkChangeTime = DateTime.Now;
       }
+      else
+        AttemptUpdateAsset((int)timeSinceLastChange);
 
       // do preprocessing here
       if (IsConnected)
       {
         UpdatePresence();
+      }
+    }
+
+    public async void AttemptUpdateAsset(int timeSinceLastChange)
+    {
+      string lastItem = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.TrackTitle);
+      await Task.Delay(MS_WAIT_BEFORE_ARTWORK_UPDATE - timeSinceLastChange);
+      string currentItem = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.TrackTitle);
+      if (lastItem == currentItem)
+      {
+        SetPresence(discordPresence);
       }
     }
 
