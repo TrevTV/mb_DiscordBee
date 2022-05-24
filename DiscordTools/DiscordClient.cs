@@ -10,9 +10,10 @@ namespace MusicBeePlugin.DiscordTools
 
   public class DiscordClient
   {
+    public RichPresence discordPresence;
+
     private DiscordRpcClient _discordClient;
     private LevelDbReader _levelDbReader = new LevelDbReader();
-    private RichPresence _discordPresence;
     private string _discordId;
     private bool _artworkUploadEnabled;
 
@@ -104,18 +105,18 @@ namespace MusicBeePlugin.DiscordTools
       IsConnected = false;
     }
 
-    public void SetPresence(RichPresence desired, Plugin.MusicBeeApiInterface _mbApiInterface)
+    public void SetPresence(RichPresence desired)
     {
-      _discordPresence = desired.Clone();
+      discordPresence = desired.Clone();
 
-      string artist = _mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
-      string album = _mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
+      string artist = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
+      string album = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
       string assetUrl = AssetManager.GetCachedAssetUrl(artist, album);
 
       if (assetUrl == null)
         assetUrl = AssetManager.ASSET_LOGO;
 
-      _discordPresence.Assets.LargeImageKey = assetUrl;
+      discordPresence.Assets.LargeImageKey = assetUrl;
 
       // do preprocessing here
       if (IsConnected)
@@ -128,7 +129,7 @@ namespace MusicBeePlugin.DiscordTools
     {
       if (IsConnected)
       {
-        _discordPresence = null;
+        discordPresence = null;
         _discordClient.ClearPresence();
       }
     }
@@ -147,7 +148,7 @@ namespace MusicBeePlugin.DiscordTools
       EnsureInit();
       Console.WriteLine($"Sending Presence update ...", "DiscordBee");
 
-      _discordClient.SetPresence(_discordPresence);
+      _discordClient.SetPresence(discordPresence);
     }
 
     private void ConnectionFailedCallback(object sender, ConnectionFailedMessage args)
@@ -162,7 +163,7 @@ namespace MusicBeePlugin.DiscordTools
     {
       Console.WriteLine($"Ready. Connected to Discord Client with User: {args.User.Username}", "DiscordRpc");
       IsConnected = true;
-      if (_discordPresence != null)
+      if (discordPresence != null)
       {
         UpdatePresence();
       }

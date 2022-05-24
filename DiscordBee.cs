@@ -14,9 +14,11 @@ namespace MusicBeePlugin
 
   public partial class Plugin
   {
-    private MusicBeeApiInterface _mbApiInterface;
+    public static Plugin Instance { get; private set; }
+    public DiscordClient _discordClient = new DiscordClient();
+    public MusicBeeApiInterface mbApiInterface;
+
     private readonly PluginInfo _about = new PluginInfo();
-    private DiscordClient _discordClient = new DiscordClient();
     private LayoutHandler _layoutHandler;
     private Settings _settings;
     private SettingsWindow _settingsWindow;
@@ -25,8 +27,8 @@ namespace MusicBeePlugin
 
     public PluginInfo Initialise(IntPtr apiInterfacePtr)
     {
-      _mbApiInterface = new MusicBeeApiInterface();
-      _mbApiInterface.Initialise(apiInterfacePtr);
+      mbApiInterface = new MusicBeeApiInterface();
+      mbApiInterface.Initialise(apiInterfacePtr);
       _about.PluginInfoVersion = PluginInfoVersion;
       _about.Name = "DiscordBee";
       _about.Description = "Update your Discord Profile with the currently playing track";
@@ -41,7 +43,9 @@ namespace MusicBeePlugin
       _about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
       _about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
-      var basePath = Path.Combine(_mbApiInterface.Setting_GetPersistentStoragePath(), _about.Name);
+      Instance = this;
+
+      var basePath = Path.Combine(mbApiInterface.Setting_GetPersistentStoragePath(), _about.Name);
       if (!Directory.Exists(basePath))
         Directory.CreateDirectory(basePath);
 
@@ -68,7 +72,7 @@ namespace MusicBeePlugin
 
     private void _updateTimer_Elapsed(object sender, ElapsedEventArgs e)
     {
-      UpdateDiscordPresence(_mbApiInterface.Player_GetPlayState());
+      UpdateDiscordPresence(mbApiInterface.Player_GetPlayState());
       _updateTimer.Stop();
     }
 
@@ -125,7 +129,7 @@ namespace MusicBeePlugin
       switch (type)
       {
         case NotificationType.PluginStartup:
-          var playState = _mbApiInterface.Player_GetPlayState();
+          var playState = mbApiInterface.Player_GetPlayState();
           // assuming MusicBee wasn't closed and started again in the same Discord session
           if (_settings.UpdatePresenceWhenStopped || playState != PlayState.Paused && playState != PlayState.Stopped)
           {
@@ -134,7 +138,7 @@ namespace MusicBeePlugin
           break;
         case NotificationType.TrackChanged:
         case NotificationType.PlayStateChanged:
-          UpdateDiscordPresence(_mbApiInterface.Player_GetPlayState());
+          UpdateDiscordPresence(mbApiInterface.Player_GetPlayState());
           break;
         // When changing the volume this event is fired for every change so with high frequency, we need to deal with that because the UI thread blocks as long as this handler is running
         case NotificationType.VolumeLevelChanged:
@@ -154,11 +158,11 @@ namespace MusicBeePlugin
 
       foreach (MetaDataType elem in Enum.GetValues(typeof(MetaDataType)))
       {
-        ret.Add(elem.ToString(), _mbApiInterface.NowPlaying_GetFileTag(elem));
+        ret.Add(elem.ToString(), mbApiInterface.NowPlaying_GetFileTag(elem));
       }
-      ret.Add("PlayState", _mbApiInterface.Player_GetPlayState().ToString());
-      ret.Add("Volume", Convert.ToInt32(_mbApiInterface.Player_GetVolume() * 100.0f).ToString());
-      var duration = TimeSpan.FromMilliseconds(_mbApiInterface.NowPlaying_GetDuration());
+      ret.Add("PlayState", mbApiInterface.Player_GetPlayState().ToString());
+      ret.Add("Volume", Convert.ToInt32(mbApiInterface.Player_GetVolume() * 100.0f).ToString());
+      var duration = TimeSpan.FromMilliseconds(mbApiInterface.NowPlaying_GetDuration());
       ret.Add("Duration", string.Format("{0:D}:{1:D2}", (int)Math.Floor(duration.TotalMinutes), duration.Seconds));
 
       return ret;
@@ -275,13 +279,13 @@ namespace MusicBeePlugin
         {
           // show remaining time
           // subtract current track position from total duration for position seeking
-          var totalRemainingDuration = _mbApiInterface.NowPlaying_GetDuration() - _mbApiInterface.Player_GetPosition();
+          var totalRemainingDuration = mbApiInterface.NowPlaying_GetDuration() - mbApiInterface.Player_GetPosition();
           _discordPresence.Timestamps.EndUnixMilliseconds = (ulong)(Math.Round(t.TotalSeconds) + Math.Round(totalRemainingDuration / 1000.0));
         }
         else
         {
           // show elapsed time
-          _discordPresence.Timestamps.StartUnixMilliseconds = (ulong)(Math.Round(t.TotalSeconds) - Math.Round(_mbApiInterface.Player_GetPosition() / 1000.0));
+          _discordPresence.Timestamps.StartUnixMilliseconds = (ulong)(Math.Round(t.TotalSeconds) - Math.Round(mbApiInterface.Player_GetPosition() / 1000.0));
         }
       }
 
@@ -343,7 +347,7 @@ namespace MusicBeePlugin
       else
       {
         Console.WriteLine("Setting new Presence...", "DiscordBee");
-        _discordClient.SetPresence(_discordPresence, _mbApiInterface);
+        _discordClient.SetPresence(_discordPresence);
       }
     }
   }
