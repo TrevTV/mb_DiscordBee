@@ -73,12 +73,12 @@ namespace MusicBeePlugin.DiscordTools
 
       if (Directory.Exists(_levelDbDir))
       {
-        Console.WriteLine($"Got leveldb dir: {_levelDbDir}");
+        Debug.WriteLine($"Got leveldb dir: {_levelDbDir}");
         return true;
       }
       else
       {
-        Console.WriteLine($"leveldb dir '{_levelDbDir}' does not exist");
+        Debug.WriteLine($"leveldb dir '{_levelDbDir}' does not exist");
         _levelDbDir = null;
         return false;
       }

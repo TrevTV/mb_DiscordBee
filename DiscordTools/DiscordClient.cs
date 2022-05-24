@@ -42,7 +42,7 @@ namespace MusicBeePlugin.DiscordTools
           if (!value && _discordClient?.IsDisposed == false)
           {
             // _isConnected set from true to false and _discordClient is not null and not disposed
-            Console.WriteLine("Closing client connection...", "DiscordBee");
+            Debug.WriteLine("Closing client connection...", "DiscordBee");
             try
             {
               _discordClient.ClearPresence();
@@ -82,7 +82,7 @@ namespace MusicBeePlugin.DiscordTools
 
     private void Init()
     {
-      Console.WriteLine("Initialising new DiscordClient instance...", "DiscordBee");
+      Debug.WriteLine("Initialising new DiscordClient instance...", "DiscordBee");
       initDiscordClient();
     }
 
@@ -149,7 +149,7 @@ namespace MusicBeePlugin.DiscordTools
     private void UpdatePresence()
     {
       EnsureInit();
-      Console.WriteLine($"Sending Presence update ...", "DiscordBee");
+      Debug.WriteLine($"Sending Presence update ...", "DiscordBee");
 
       _discordClient.SetPresence(discordPresence);
     }
@@ -164,7 +164,7 @@ namespace MusicBeePlugin.DiscordTools
 
     private void ReadyCallback(object sender, ReadyMessage args)
     {
-      Console.WriteLine($"Ready. Connected to Discord Client with User: {args.User.Username}", "DiscordRpc");
+      Debug.WriteLine($"Ready. Connected to Discord Client with User: {args.User.Username}", "DiscordRpc");
       IsConnected = true;
       if (discordPresence != null)
       {
@@ -174,7 +174,7 @@ namespace MusicBeePlugin.DiscordTools
 
     private void ErrorCallback(object sender, ErrorMessage e)
     {
-      Console.WriteLine($"DiscordRpc: ERROR ({e.Code})", e.Message);
+      Debug.WriteLine($"DiscordRpc: ERROR ({e.Code})", e.Message);
       if (e.Code == ErrorCode.PipeException || e.Code == ErrorCode.UnkownError)
       {
         IsConnected = false;
@@ -183,7 +183,7 @@ namespace MusicBeePlugin.DiscordTools
 
     private void DisconnectedCallback(object sender, CloseMessage c)
     {
-      Console.WriteLine("DiscordRpc: Disconnected ({0}) - {1}", c.Code, c.Reason);
+      Debug.WriteLine("DiscordRpc: Disconnected ({0}) - {1}", c.Code, c.Reason);
       IsConnected = false;
     }
   }
@@ -239,7 +239,7 @@ namespace MusicBeePlugin.DiscordTools
 
     private void Log(string msg, params object[] args)
     {
-      Console.WriteLine("" + Level.ToString() + ": " + msg, args);
+      Debug.WriteLine("" + Level.ToString() + ": " + msg, args);
     }
   }
 }
