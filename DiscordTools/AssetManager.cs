@@ -2,6 +2,7 @@ namespace MusicBeePlugin.DiscordTools
 {
   using Newtonsoft.Json;
   using Newtonsoft.Json.Linq;
+  using System;
   using System.Collections.Generic;
   using System.IO;
   using System.Net.Http;
@@ -16,6 +17,7 @@ namespace MusicBeePlugin.DiscordTools
     public const string LASTFM_API_KEY = "81626a336b15457291e55044f80b7f3b";
 
     private static string cacheFilePath;
+    private static DateTime lastApiCall;
     private readonly static HttpClient httpClient;
     private static Dictionary<string, string> albumUrlPairs;
 
@@ -79,10 +81,15 @@ namespace MusicBeePlugin.DiscordTools
         Plugin.Instance._discordClient.SetPresence(Plugin.Instance._discordClient.discordPresence);
     }
 
-    private static async void GetLastFMAlbumInfo(string artist, string album, System.Action<JObject> callback)
+    private static async void GetLastFMAlbumInfo(string artist, string album, Action<JObject> callback)
     {
+      double msSinceLastCall = (DateTime.Now - lastApiCall).TotalMilliseconds;
+      if (msSinceLastCall < 500)
+        await System.Threading.Tasks.Task.Delay(1000);
+
       string url = $"{BASE_LASTFM_API}/?method=album.getinfo&api_key={LASTFM_API_KEY}&artist={artist}&album={album}&format=json";
       string response = await httpClient.GetStringAsync(url);
+      lastApiCall = DateTime.Now;
       callback(JObject.Parse(response));
     }
 
