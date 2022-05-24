@@ -87,7 +87,7 @@ namespace MusicBeePlugin.DiscordTools
       if (msSinceLastCall < 500)
         await System.Threading.Tasks.Task.Delay(1000);
 
-      string url = $"{BASE_LASTFM_API}/?method=album.getinfo&api_key={LASTFM_API_KEY}&artist={artist}&album={album}&format=json";
+      string url = $"{BASE_LASTFM_API}/?method=album.getinfo&api_key={LASTFM_API_KEY}&artist={Uri.EscapeDataString(artist)}&album={Uri.EscapeDataString(album)}&format=json";
       string response = await httpClient.GetStringAsync(url);
       lastApiCall = DateTime.Now;
       callback(JObject.Parse(response));

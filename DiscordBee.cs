@@ -54,6 +54,8 @@ namespace MusicBeePlugin
       _settingsWindow = new SettingsWindow(this, settings);
 
       AssetManager.SetCachePath(Path.Combine(basePath, "AlbumArtUrlCache.json"));
+      // this makes debugging easier, at least to me
+      //AllocConsole();
 
       _discordClient.DiscordId = settings.DiscordAppId;
 
@@ -68,6 +70,9 @@ namespace MusicBeePlugin
 
       return _about;
     }
+
+    //[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    //public static extern bool AllocConsole();
 
     private void _updateTimer_Elapsed(object sender, ElapsedEventArgs e)
     {
