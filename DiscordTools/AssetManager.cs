@@ -47,7 +47,6 @@ namespace MusicBeePlugin.DiscordTools
 
     private static void CacheAssetUrl(JObject albInfo, string hash)
     {
-      System.Console.WriteLine("checking lastfm json");
       if (albInfo.ContainsKey("error"))
         return;
 
@@ -77,10 +76,7 @@ namespace MusicBeePlugin.DiscordTools
         albumUrlPairs.Add(hash, finalUrl);
 
       if (finalUrl != null)
-      {
-        System.Console.WriteLine("updating presence");
         Plugin.Instance._discordClient.SetPresence(Plugin.Instance._discordClient.discordPresence);
-      }
     }
 
     private static async void GetLastFMAlbumInfo(string artist, string album, System.Action<JObject> callback)

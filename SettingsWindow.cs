@@ -64,7 +64,7 @@ namespace MusicBeePlugin
       checkBoxTextOnly.Checked = settings.TextOnly;
       checkBoxShowPlayState.Checked = settings.ShowPlayState;
       checkBoxShowOnlyNonPlayingState.Checked = settings.ShowOnlyNonPlayingState;
-      checkBoxArtworkUpload.Checked = settings.UploadArtwork;
+      checkBoxArtworkDisplay.Checked = settings.DisplayArtwork;
       customButtonLabel.Text = settings.ButtonLabel;
       customButtonUrl.Text = settings.ButtonUrl;
       customButtonToggle.Checked = settings.ShowButton;
@@ -107,7 +107,7 @@ namespace MusicBeePlugin
       _settings.TextOnly = checkBoxTextOnly.Checked;
       _settings.ShowPlayState = checkBoxShowPlayState.Checked;
       _settings.ShowOnlyNonPlayingState = checkBoxShowOnlyNonPlayingState.Checked;
-      _settings.UploadArtwork = checkBoxArtworkUpload.Checked;
+      _settings.DisplayArtwork = checkBoxArtworkDisplay.Checked;
       _settings.ButtonUrl = customButtonUrl.Text;
       _settings.ButtonLabel = customButtonLabel.Text;
       _settings.ShowButton = customButtonToggle.Checked;
@@ -147,11 +147,6 @@ namespace MusicBeePlugin
         }
         textBoxDiscordAppId.BackColor = Color.White;
         return true;
-      }
-
-      if (checkBoxArtworkUpload.Checked && !validateDiscordId())
-      {
-        return false;
       }
 
       if (textBoxDiscordAppId.Text.Length > 0 && !validateDiscordId())

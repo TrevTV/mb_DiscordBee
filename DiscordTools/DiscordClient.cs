@@ -109,14 +109,17 @@ namespace MusicBeePlugin.DiscordTools
     {
       discordPresence = desired.Clone();
 
-      string artist = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
-      string album = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
-      string assetUrl = AssetManager.GetCachedAssetUrl(artist, album);
+      if (Plugin.Instance.settings.DisplayArtwork)
+      {
+        string artist = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
+        string album = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
+        string assetUrl = AssetManager.GetCachedAssetUrl(artist, album);
 
-      if (assetUrl == null)
-        assetUrl = AssetManager.ASSET_LOGO;
+        if (assetUrl == null)
+          assetUrl = AssetManager.ASSET_LOGO;
 
-      discordPresence.Assets.LargeImageKey = assetUrl;
+        discordPresence.Assets.LargeImageKey = assetUrl;
+      }
 
       // do preprocessing here
       if (IsConnected)

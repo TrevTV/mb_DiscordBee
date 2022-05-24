@@ -17,10 +17,10 @@ namespace MusicBeePlugin
     public static Plugin Instance { get; private set; }
     public DiscordClient _discordClient = new DiscordClient();
     public MusicBeeApiInterface mbApiInterface;
+    public Settings settings;
 
     private readonly PluginInfo _about = new PluginInfo();
     private LayoutHandler _layoutHandler;
-    private Settings _settings;
     private SettingsWindow _settingsWindow;
     private Timer _updateTimer = new Timer(500);
 
@@ -49,14 +49,13 @@ namespace MusicBeePlugin
       if (!Directory.Exists(basePath))
         Directory.CreateDirectory(basePath);
 
-      _settings = Settings.GetInstance(Path.Combine(basePath, _about.Name + ".settings"));
-      _settings.SettingChanged += _SettingChangedCallback;
-      _settingsWindow = new SettingsWindow(this, _settings);
+      settings = Settings.GetInstance(Path.Combine(basePath, _about.Name + ".settings"));
+      settings.SettingChanged += _SettingChangedCallback;
+      _settingsWindow = new SettingsWindow(this, settings);
 
       AssetManager.SetCachePath(Path.Combine(basePath, "AlbumArtUrlCache.json"));
 
-      _discordClient.ArtworkUploadEnabled = _settings.UploadArtwork;
-      _discordClient.DiscordId = _settings.DiscordAppId;
+      _discordClient.DiscordId = settings.DiscordAppId;
 
       // Match least number of chars possible but min 1
       _layoutHandler = new LayoutHandler(new Regex("\\[([^[]+?)\\]"));
@@ -80,11 +79,7 @@ namespace MusicBeePlugin
     {
       if (e.SettingProperty.Equals("DiscordAppId"))
       {
-        _discordClient.DiscordId = _settings.DiscordAppId;
-      }
-      if (e.SettingProperty.Equals("UploadArtwork"))
-      {
-        _discordClient.ArtworkUploadEnabled = _settings.UploadArtwork;
+        _discordClient.DiscordId = settings.DiscordAppId;
       }
     }
 
@@ -103,7 +98,7 @@ namespace MusicBeePlugin
     // its up to you to figure out whether anything has changed and needs updating
     public void SaveSettings()
     {
-      _settings.Save();
+      settings.Save();
     }
 
     // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -115,7 +110,7 @@ namespace MusicBeePlugin
     // uninstall this plugin - clean up any persisted files
     public void Uninstall()
     {
-      _settings.Delete();
+      settings.Delete();
     }
 
     // receive event notifications from MusicBee
@@ -131,7 +126,7 @@ namespace MusicBeePlugin
         case NotificationType.PluginStartup:
           var playState = mbApiInterface.Player_GetPlayState();
           // assuming MusicBee wasn't closed and started again in the same Discord session
-          if (_settings.UpdatePresenceWhenStopped || playState != PlayState.Paused && playState != PlayState.Stopped)
+          if (settings.UpdatePresenceWhenStopped || playState != PlayState.Paused && playState != PlayState.Stopped)
           {
             UpdateDiscordPresence(playState);
           }
@@ -212,13 +207,13 @@ namespace MusicBeePlugin
       }
 
       // Button Functionality
-      if (_settings.ShowButton)
+      if (settings.ShowButton)
       {
-        var uri = _settings.ButtonUrl
+        var uri = settings.ButtonUrl
           .Split('/')
           .Select(part =>
           {
-            var result = _layoutHandler.Render(part, metaDataDict, _settings.Seperator);
+            var result = _layoutHandler.Render(part, metaDataDict, settings.Seperator);
             if (part != result && (part != "_"))
             {
               return WebUtility.UrlEncode(result);
@@ -235,7 +230,7 @@ namespace MusicBeePlugin
           {
             new Button
             {
-              Label = padString(_settings.ButtonLabel),
+              Label = padString(settings.ButtonLabel),
               Url = finalUrl
             }
           };
@@ -244,7 +239,7 @@ namespace MusicBeePlugin
 
       void SetImage(string name, bool forceHideSmallImage = false)
       {
-        if (_settings.TextOnly)
+        if (settings.TextOnly)
         {
           _discordPresence.Assets.LargeImageKey = null;
           _discordPresence.Assets.LargeImageText = null;
@@ -254,12 +249,12 @@ namespace MusicBeePlugin
         else
         {
           _discordPresence.Assets.LargeImageKey = AssetManager.ASSET_LOGO;
-          _discordPresence.Assets.LargeImageText = padString(_layoutHandler.Render(_settings.LargeImageText, metaDataDict, _settings.Seperator));
+          _discordPresence.Assets.LargeImageText = padString(_layoutHandler.Render(settings.LargeImageText, metaDataDict, settings.Seperator));
 
-          if (_settings.ShowPlayState && !forceHideSmallImage)
+          if (settings.ShowPlayState && !forceHideSmallImage)
           {
             _discordPresence.Assets.SmallImageKey = padString(name);
-            _discordPresence.Assets.SmallImageText = padString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
+            _discordPresence.Assets.SmallImageText = padString(_layoutHandler.Render(settings.SmallImageText, metaDataDict, settings.Seperator));
           }
           else
           {
@@ -269,13 +264,13 @@ namespace MusicBeePlugin
         }
       }
 
-      _discordPresence.State = padString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));
+      _discordPresence.State = padString(_layoutHandler.Render(settings.PresenceState, metaDataDict, settings.Seperator));
 
       var t = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1));
 
-      if (_settings.ShowTime)
+      if (settings.ShowTime)
       {
-        if (_settings.ShowRemainingTime)
+        if (settings.ShowRemainingTime)
         {
           // show remaining time
           // subtract current track position from total duration for position seeking
@@ -292,7 +287,7 @@ namespace MusicBeePlugin
       switch (playerGetPlayState)
       {
         case PlayState.Playing:
-          SetImage(AssetManager.ASSET_PLAY, _settings.ShowOnlyNonPlayingState);
+          SetImage(AssetManager.ASSET_PLAY, settings.ShowOnlyNonPlayingState);
           break;
         case PlayState.Stopped:
           SetImage(AssetManager.ASSET_STOP);
@@ -309,14 +304,14 @@ namespace MusicBeePlugin
           break;
       }
 
-      _discordPresence.Details = padString(_layoutHandler.Render(_settings.PresenceDetails, metaDataDict, _settings.Seperator));
+      _discordPresence.Details = padString(_layoutHandler.Render(settings.PresenceDetails, metaDataDict, settings.Seperator));
 
       var trackcnt = -1;
       var trackno = -1;
       try
       {
-        trackcnt = int.Parse(_layoutHandler.Render(_settings.PresenceTrackCnt, metaDataDict, _settings.Seperator));
-        trackno = int.Parse(_layoutHandler.Render(_settings.PresenceTrackNo, metaDataDict, _settings.Seperator));
+        trackcnt = int.Parse(_layoutHandler.Render(settings.PresenceTrackCnt, metaDataDict, settings.Seperator));
+        trackno = int.Parse(_layoutHandler.Render(settings.PresenceTrackNo, metaDataDict, settings.Seperator));
       }
 #pragma warning disable RCS1075 // Avoid empty catch clause that catches System.Exception.
       catch (Exception)
@@ -339,7 +334,7 @@ namespace MusicBeePlugin
         };
       }
 
-      if (!_settings.UpdatePresenceWhenStopped && (playerGetPlayState == PlayState.Paused || playerGetPlayState == PlayState.Stopped))
+      if (!settings.UpdatePresenceWhenStopped && (playerGetPlayState == PlayState.Paused || playerGetPlayState == PlayState.Stopped))
       {
         Console.WriteLine("Clearing Presence...", "DiscordBee");
         _discordClient.ClearPresence();

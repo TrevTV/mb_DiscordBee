@@ -156,28 +156,12 @@ namespace MusicBeePlugin
       set => setIfChanged("_showOnlyNonPlayingState", value);
     }
 
-    [DataMember] private bool? _uploadArtwork;
+    [DataMember] private bool? _displayArtwork;
 
-    public bool UploadArtwork
+    public bool DisplayArtwork
     {
-      get => _uploadArtwork.HasValue && _uploadArtwork.Value;
-      set
-      {
-        if (!DiscordAppId.Equals(defaults["DiscordAppId"]))
-        {
-          setIfChanged("_uploadArtwork", value);
-        }
-        else
-        {
-          var eventArgs = new SettingChangedEventArgs();
-          eventArgs.SettingProperty = "UploadArtwork";
-          eventArgs.OldValue = _uploadArtwork;
-          eventArgs.NewValue = null;
-          _uploadArtwork = null;
-          IsDirty = true;
-          OnSettingChanged(eventArgs);
-        }
-      }
+      get => _displayArtwork.HasValue && _displayArtwork.Value;
+      set => setIfChanged("_displayArtwork", value);
     }
 
     [DataMember] private string _buttonLabel;
