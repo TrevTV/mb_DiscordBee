@@ -84,7 +84,6 @@ namespace MusicBeePlugin.DiscordTools
 
     private static async void GetLastFMAlbumInfo(string artist, string album, Action<JObject> callback)
     {
-      // TODO: replace this with a proper queue with a delay between calls
       double msSinceLastCall = (DateTime.Now - lastApiCall).TotalMilliseconds;
       if (msSinceLastCall < 500)
         await System.Threading.Tasks.Task.Delay(1000);
