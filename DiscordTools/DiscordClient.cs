@@ -15,9 +15,9 @@ namespace MusicBeePlugin.DiscordTools
     private DiscordRpcClient _discordClient;
     private LevelDbReader _levelDbReader = new LevelDbReader();
     private string _discordId;
-    private DateTime _lastArtworkChangeTime;
+    private DateTime _lastArtworkChangeTime = DateTime.Now;
 
-    private const int MS_WAIT_BEFORE_ARTWORK_UPDATE = 1250;
+    private const int MS_WAIT_BEFORE_PRESENCE_UPDATE = 1250;
 
     public string DiscordId
     {
@@ -93,34 +93,36 @@ namespace MusicBeePlugin.DiscordTools
       discordPresence = desired.Clone();
 
       double timeSinceLastChange = (DateTime.Now - _lastArtworkChangeTime).TotalMilliseconds;
-      if (Plugin.Instance.settings.DisplayArtwork && timeSinceLastChange > MS_WAIT_BEFORE_ARTWORK_UPDATE)
+      if (timeSinceLastChange > MS_WAIT_BEFORE_PRESENCE_UPDATE)
       {
-        string artist = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
-        string album = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
-        string assetUrl = AssetManager.GetCachedAssetUrl(artist, album);
+        if (Plugin.Instance.settings.DisplayArtwork)
+        {
+          string artist = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.AlbumArtist);
+          string album = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.Album);
+          string assetUrl = AssetManager.GetCachedAssetUrl(artist, album);
 
-        if (assetUrl == null)
-          assetUrl = AssetManager.ASSET_LOGO;
-        else if (!assetUrl.StartsWith("http")) // Allows people to add their own URLs to the cache if they'd like
-          assetUrl = AssetManager.BASE_LASTFM_ASSET + assetUrl;
+          if (assetUrl == null)
+            assetUrl = AssetManager.ASSET_LOGO;
+          else if (!assetUrl.StartsWith("http")) // Allows people to add their own URLs to the cache if they'd like
+            assetUrl = AssetManager.BASE_LASTFM_ASSET + assetUrl;
 
-        discordPresence.Assets.LargeImageKey = assetUrl;
+          discordPresence.Assets.LargeImageKey = assetUrl;
+        }
+
+        // do preprocessing here
+        if (IsConnected)
+          UpdatePresence();
+
         _lastArtworkChangeTime = DateTime.Now;
       }
       else
         AttemptUpdateAsset((int)timeSinceLastChange);
-
-      // do preprocessing here
-      if (IsConnected)
-      {
-        UpdatePresence();
-      }
     }
 
     public async void AttemptUpdateAsset(int timeSinceLastChange)
     {
       string lastItem = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.TrackTitle);
-      await Task.Delay(MS_WAIT_BEFORE_ARTWORK_UPDATE - timeSinceLastChange);
+      await Task.Delay(MS_WAIT_BEFORE_PRESENCE_UPDATE - timeSinceLastChange);
       string currentItem = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.TrackTitle);
       if (lastItem == currentItem)
       {
