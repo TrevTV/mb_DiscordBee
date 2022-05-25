@@ -54,6 +54,7 @@ namespace MusicBeePlugin
       _settingsWindow = new SettingsWindow(this, settings);
 
       AssetManager.SetCachePath(Path.Combine(basePath, "AlbumArtUrlCache.json"));
+      mbApiInterface.MB_AddMenuItem($"context.Main/Force Recache Artwork URL", "", AssetManager.RecacheSelectedAlbum);
       // this makes debugging easier, at least to me
       //AllocConsole();
 

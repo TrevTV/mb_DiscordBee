@@ -6,6 +6,7 @@ namespace MusicBeePlugin.DiscordTools
   using System.Collections.Generic;
   using System.IO;
   using System.Net.Http;
+  using static MusicBeePlugin.Plugin;
 
   internal static class AssetManager
   {
@@ -47,6 +48,28 @@ namespace MusicBeePlugin.DiscordTools
       }
     }
 
+    public static void RecacheSelectedAlbum(object sender, EventArgs args)
+    {
+      Instance.mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
+      if (files == null)
+        return;
+
+      List<string> completedAlbums = new List<string>();
+
+      foreach (string file in files)
+      {
+        string artist = Instance.mbApiInterface.Library_GetFileTag(file, MetaDataType.AlbumArtist);
+        string album = Instance.mbApiInterface.Library_GetFileTag(file, MetaDataType.Album);
+        string hash = artist + ":" + album;
+
+        if (completedAlbums.Contains(hash))
+          continue;
+
+        GetLastFMAlbumInfo(artist, album, a => CacheAssetUrl(a, hash));
+        completedAlbums.Add(hash);
+      }
+    }
+
     private static void CacheAssetUrl(JObject albInfo, string hash)
     {
       if (albInfo.ContainsKey("error"))
@@ -74,12 +97,13 @@ namespace MusicBeePlugin.DiscordTools
       }
 
       // we're also adding nulls here so we arent searching for them every time and we know to ignore them
-      // TODO: related, implement a menu option to force reretrieve album art
-      if (!albumUrlPairs.ContainsKey(hash))
+      if (albumUrlPairs.ContainsKey(hash))
+        albumUrlPairs[hash] = finalUrl;
+      else
         albumUrlPairs.Add(hash, finalUrl);
 
       if (finalUrl != null)
-        Plugin.Instance._discordClient.SetPresence(Plugin.Instance._discordClient.discordPresence);
+        Instance._discordClient.SetPresence(Instance._discordClient.discordPresence);
     }
 
     private static async void GetLastFMAlbumInfo(string artist, string album, Action<JObject> callback)
