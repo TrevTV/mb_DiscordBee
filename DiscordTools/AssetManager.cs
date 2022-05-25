@@ -15,6 +15,7 @@ namespace MusicBeePlugin.DiscordTools
     public const string ASSET_PAUSE = "pause";
     public const string ASSET_STOP = "stop";
     public const string BASE_LASTFM_API = "http://ws.audioscrobbler.com/2.0";
+    public const string BASE_LASTFM_ASSET = "https://lastfm.freetls.fastly.net/i/u/";
     public const string LASTFM_API_KEY = "81626a336b15457291e55044f80b7f3b";
 
     private static string cacheFilePath;
@@ -98,9 +99,9 @@ namespace MusicBeePlugin.DiscordTools
 
       // we're also adding nulls here so we arent searching for them every time and we know to ignore them
       if (albumUrlPairs.ContainsKey(hash))
-        albumUrlPairs[hash] = finalUrl;
+        albumUrlPairs[hash] = finalUrl?.Replace(BASE_LASTFM_ASSET, "");
       else
-        albumUrlPairs.Add(hash, finalUrl);
+        albumUrlPairs.Add(hash, finalUrl?.Replace(BASE_LASTFM_ASSET, ""));
 
       if (finalUrl != null)
         Instance._discordClient.SetPresence(Instance._discordClient.discordPresence);

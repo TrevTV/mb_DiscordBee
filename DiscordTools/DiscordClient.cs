@@ -101,6 +101,8 @@ namespace MusicBeePlugin.DiscordTools
 
         if (assetUrl == null)
           assetUrl = AssetManager.ASSET_LOGO;
+        else if (!assetUrl.StartsWith("http")) // Allows people to add their own URLs to the cache if they'd like
+          assetUrl = AssetManager.BASE_LASTFM_ASSET + assetUrl;
 
         discordPresence.Assets.LargeImageKey = assetUrl;
         _lastArtworkChangeTime = DateTime.Now;
