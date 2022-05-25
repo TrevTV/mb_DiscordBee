@@ -15,7 +15,7 @@ namespace MusicBeePlugin.DiscordTools
     private DiscordRpcClient _discordClient;
     private LevelDbReader _levelDbReader = new LevelDbReader();
     private string _discordId;
-    private DateTime _lastArtworkChangeTime = DateTime.Now;
+    private DateTime _lastPresenceChangeTime = DateTime.Now;
 
     private const int MS_WAIT_BEFORE_PRESENCE_UPDATE = 1250;
 
@@ -92,7 +92,7 @@ namespace MusicBeePlugin.DiscordTools
     {
       discordPresence = desired.Clone();
 
-      double timeSinceLastChange = (DateTime.Now - _lastArtworkChangeTime).TotalMilliseconds;
+      double timeSinceLastChange = (DateTime.Now - _lastPresenceChangeTime).TotalMilliseconds;
       if (timeSinceLastChange > MS_WAIT_BEFORE_PRESENCE_UPDATE)
       {
         if (Plugin.Instance.settings.DisplayArtwork)
@@ -113,7 +113,7 @@ namespace MusicBeePlugin.DiscordTools
         if (IsConnected)
           UpdatePresence();
 
-        _lastArtworkChangeTime = DateTime.Now;
+        _lastPresenceChangeTime = DateTime.Now;
       }
       else
         AttemptUpdateAsset((int)timeSinceLastChange);
