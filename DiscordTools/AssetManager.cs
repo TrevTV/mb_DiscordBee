@@ -39,6 +39,9 @@ namespace MusicBeePlugin.DiscordTools
 
     public static string GetCachedAssetUrl(string artist, string album)
     {
+      if (string.IsNullOrEmpty(artist) || string.IsNullOrEmpty(album))
+        return null;
+
       string hash = artist + ":" + album;
       if (albumUrlPairs.TryGetValue(hash, out string url))
         return url;
@@ -61,6 +64,10 @@ namespace MusicBeePlugin.DiscordTools
       {
         string artist = Instance.mbApiInterface.Library_GetFileTag(file, MetaDataType.AlbumArtist);
         string album = Instance.mbApiInterface.Library_GetFileTag(file, MetaDataType.Album);
+
+        if (string.IsNullOrEmpty(artist) || string.IsNullOrEmpty(album))
+          continue;
+
         string hash = artist + ":" + album;
 
         if (completedAlbums.Contains(hash))
