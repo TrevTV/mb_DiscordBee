@@ -17,7 +17,7 @@ namespace MusicBeePlugin.DiscordTools
     private string _discordId;
     private DateTime _lastPresenceChangeTime = DateTime.Now;
 
-    private const int MS_WAIT_BEFORE_PRESENCE_UPDATE = 1250;
+    private const int MS_WAIT_BEFORE_PRESENCE_UPDATE = 2250;
 
     public string DiscordId
     {
@@ -122,7 +122,17 @@ namespace MusicBeePlugin.DiscordTools
     public async void AttemptUpdateAsset(int timeSinceLastChange)
     {
       string lastItem = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.TrackTitle);
-      await Task.Delay(MS_WAIT_BEFORE_PRESENCE_UPDATE - timeSinceLastChange);
+
+      // I don't know what causes this but it happens
+      try
+      {
+        await Task.Delay(MS_WAIT_BEFORE_PRESENCE_UPDATE - timeSinceLastChange);
+      }
+      catch
+      {
+        await Task.Delay(MS_WAIT_BEFORE_PRESENCE_UPDATE);
+      }
+
       string currentItem = Plugin.Instance.mbApiInterface.NowPlaying_GetFileTag(Plugin.MetaDataType.TrackTitle);
       if (lastItem == currentItem)
       {
