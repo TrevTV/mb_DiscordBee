@@ -56,7 +56,6 @@ namespace MusicBeePlugin.DiscordTools
             finally
             {
               _discordClient.Dispose();
-              AssetManager.Shutdown();
             }
           }
         }

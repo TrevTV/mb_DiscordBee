@@ -121,7 +121,9 @@ namespace MusicBeePlugin.DiscordTools
         await System.Threading.Tasks.Task.Delay(1000);
 
       string url = $"{BASE_LASTFM_API}/?method=album.getinfo&api_key={LASTFM_API_KEY}&artist={Uri.EscapeDataString(artist)}&album={Uri.EscapeDataString(album)}&format=json";
-      string response = await httpClient.GetStringAsync(url);
+      string response = "{\"error\":\"connection issue\"}";
+      try { response = await httpClient.GetStringAsync(url); }
+      catch (System.Net.WebException) { }
       lastApiCall = DateTime.Now;
       callback(JObject.Parse(response));
     }

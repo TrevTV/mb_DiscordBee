@@ -37,7 +37,7 @@ namespace MusicBeePlugin
       _about.Type = PluginType.General;
       _about.VersionMajor = 2;  // your plugin version
       _about.VersionMinor = 2;
-      _about.Revision = 0;
+      _about.Revision = 2;
       _about.MinInterfaceVersion = MinInterfaceVersion;
       _about.MinApiRevision = MinApiRevision;
       _about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
@@ -111,6 +111,7 @@ namespace MusicBeePlugin
     public void Close(PluginCloseReason reason)
     {
       _discordClient.Close();
+      AssetManager.Shutdown();
     }
 
     // uninstall this plugin - clean up any persisted files
@@ -147,8 +148,6 @@ namespace MusicBeePlugin
           {
             _updateTimer.Start();
           }
-          break;
-        case NotificationType.PlayingTracksChanged:
           break;
       }
     }
